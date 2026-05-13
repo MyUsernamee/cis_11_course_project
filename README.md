@@ -4,8 +4,8 @@ This is a course project for CIS-11 (Assembly Programming in LC-3).
 
 # Documentation
 
-The project prompt is in [PROMPT.md](./PROMPT.md).
-The design and considerations and documentation is in [design/](./design/).
+The project prompt is in [PROMPT.md](docs/PROMPT.md).
+The design and considerations and documentation is in [docs/](./docs/).
 
 # Contributors
 

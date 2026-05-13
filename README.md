@@ -9,6 +9,6 @@ The design and considerations and documentation is in [design/](./design/).
 
 # Contributors
 
-(MyUsernamee (Delano Leslie))[http://github.com/MyUsernmee]
-(Sean Robertson)[]
-(Danial Perez)[]
+- [MyUsernamee (Delano Leslie)](http://github.com/MyUsernmee)
+- [Sean Robertson]()
+- [Daniel Perez]()

@@ -1,0 +1,141 @@
+; frequency_counter.lc3
+; The main core logic of the project, takes in a name 
+; and stores the counts of each letter in an array.
+; These will be subroutines and there will be a 
+; test project in this file, where later it
+; will be merged with other's code for the
+; final program.
+
+.ORIG x3000
+
+test_counter 
+    LEA R0, TEST_NAME
+    PUTS
+    LEA R1, TEST_NAME
+    JSR string_lower
+    JSR string_alphitize
+    LEA R0, TEST_NAME
+    PUTS
+    HALT
+    LEA R2, COUNT_ARRAY
+    JSR counter
+    
+string_lower
+    ADD R6, R6, #-1
+    STR R7, R6, #0
+    ADD R6, R6, #-1
+    STR R1, R6, #0
+    ADD R6, R6, #-1
+    STR R2, R6, #0 ; Save R1, R2, R7 to stack
+    
+    AND R0, R0, #0 ; i = 0
+    string_lower_iter ; while ( 
+        LDR R2, R1, #0 ; string[i] != 0
+        BRz string_lower_done ; ) {
+
+            LD R3, LOWER_START
+            NOT R3, R3
+            ADD R3, R3, #1
+            ADD R3, R3, R2 ; if (string[i] < 'a'
+
+            BRp string_lower_iter_inc 
+            LD R2, LOWER_START
+            ADD R3, R3, R2
+            
+            LD R2, CAP_START
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2 
+
+            BRn string_lower_iter_inc
+
+            LD R2, p26
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2 ; 0 < 26
+
+            BRp string_lower_iter_inc
+
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2
+
+            LD R2, LOWER_START
+            ADD R3, R3, R2
+            STR R3, R1, #0 ; string[i] = lower(string[i]) = string[i] - 'A'
+
+        string_lower_iter_inc
+            ADD R1, R1, #1 ; i++ | R1++
+
+        BRnzp string_lower_iter ; }
+
+    string_lower_done ; return
+    LDR R7, R6, #2
+    LDR R1, R6, #1
+    LDR R2, R6, #0
+    ADD R6, R6, #3
+    
+    RET
+
+string_alphitize
+    ADD R6, R6, #-1
+    STR R7, R6, #0
+    ADD R6, R6, #-1
+    STR R1, R6, #0
+    ADD R6, R6, #-1
+    STR R2, R6, #0 ; Save R1, R2, R7 to stack
+    
+    AND R0, R0, #0 ; i = 0
+    string_alphitize_iter ; while ( 
+        LDR R2, R1, #0 ; string[i] != 0
+        BRz string_alphitize_done ; ) {
+
+            LD R3, LOWER_START
+            NOT R3, R3
+            ADD R3, R3, #1
+            ADD R3, R3, R2 ; if (string[i] < 'a'
+
+            BRp string_alphitize_iter_inc 
+            LD R2, LOWER_START
+            ADD R3, R3, R2
+            
+            LD R2, CAP_START
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2 
+
+            BRp string_alphitize_iter_inc
+
+            LD R2, p26
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2 ; 0 < 26
+
+            BRp string_alphitize_iter_inc
+
+            LD R3, SPACE
+            STR R3, R1, #0 ; string[i] = alphitize(string[i]) = string[i] - 'A'
+
+        string_alphitize_iter_inc
+            ADD R1, R1, #1 ; i++ | R1++
+    BRnzp string_alphitize_iter ; }
+
+    string_alphitize_done ; return
+    LDR R7, R6, #2
+    LDR R1, R6, #1
+    LDR R2, R6, #0
+    ADD R6, R6, #3
+    
+    RET
+
+   
+counter
+
+TEST_NAME .STRINGZ "Sir Testcasifiulz-Payasser\n"
+CAP_START .STRINGZ "A"
+LOWER_START .STRINGZ "a"
+SPACE .STRINGZ " "
+COUNT_ARRAY .BLKW 27
+p26 .FILL #26
+
+.END

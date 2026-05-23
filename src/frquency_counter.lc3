@@ -13,12 +13,11 @@ test_counter
     PUTS
     LEA R1, TEST_NAME
     JSR string_lower
-    JSR string_alphitize
     LEA R0, TEST_NAME
     PUTS
-    HALT
-    LEA R2, COUNT_ARRAY
+    LEA R2, COUNTER_TEST_LOC
     JSR counter
+    HALT
     
 string_lower
     ADD R6, R6, #-1
@@ -77,65 +76,85 @@ string_lower
     
     RET
 
-string_alphitize
+counter
+    ; R1 stores pointer to string to operate on
+    ; R2 stores pointer to 26 locations in memory for us to use 
     ADD R6, R6, #-1
     STR R7, R6, #0
     ADD R6, R6, #-1
     STR R1, R6, #0
     ADD R6, R6, #-1
-    STR R2, R6, #0 ; Save R1, R2, R7 to stack
+    STR R2, R6, #0
+    ADD R6, R6, #-1
+    STR R3, R6, #0 
+    ADD R6, R6, #-1
+    ADD R6, R6, #-1
+    STR R5, R6, #0 ; Save R1-R5, R7 to stack
+
+    ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START
+    ; R1-5 will be used in decreasing orders of access frequency.
+    ; i.e. If only need to store something once then
+    ; read it a bunch of times, it should be in R5
+
+    LD R5, p26
+    NOT R5, R5
+    ADD R5, R5, #-1
+
+    AND R0, R0, #0
+    AND R4, R4, #0
+    counter_zero_stack_loop
+        ADD R3, R4, R5
+        BRz counter_zero_stack_loop_exit
+
+        ADD R3, R4, R2
+        STR R0, R3, #0
+        ADD R4, R4, #1
+    counter_zero_stack_loop_exit
+
+    counter_iter ; while ( 
+        LDR R5, R1, #0 ; string[i] != 0
+        BRz counter_done ; ) {
+            LD R0, LOWER_START
+            NOT R0, R0
+            ADD R0, R0, #1
     
-    AND R0, R0, #0 ; i = 0
-    string_alphitize_iter ; while ( 
-        LDR R2, R1, #0 ; string[i] != 0
-        BRz string_alphitize_done ; ) {
+            ADD R5, R5, R0
+            BRn counter_continue ; if (string[i] < 'a') continue;
 
-            LD R3, LOWER_START
-            NOT R3, R3
-            ADD R3, R3, #1
-            ADD R3, R3, R2 ; if (string[i] < 'a'
+            LD R0, p26
+            NOT R0, R0
+            ADD R0, R0, #1            
+            ADD R5, R5, R0
+            BRp counter_continue ; if (string[i] > 'z') continue;
 
-            BRp string_alphitize_iter_inc 
-            LD R2, LOWER_START
-            ADD R3, R3, R2
+            NOT R0, R0,
+            ADD R0, R0, #1
+            ADD R5, R5, R0
             
-            LD R2, CAP_START
-            NOT R2, R2
-            ADD R2, R2, #1
-            ADD R3, R3, R2 
+            ADD R4, R2, R5
 
-            BRp string_alphitize_iter_inc
+            LDR R3, R4, #0
+            ADD R3, R3, #1
+            STR R3, R4, #0 ; counts[i] += 1
+        counter_continue
+        ADD R1, R1, #1 ; i++ | R1++
+    BRnzp counter_iter ; }
 
-            LD R2, p26
-            NOT R2, R2
-            ADD R2, R2, #1
-            ADD R3, R3, R2 ; 0 < 26
-
-            BRp string_alphitize_iter_inc
-
-            LD R3, SPACE
-            STR R3, R1, #0 ; string[i] = alphitize(string[i]) = string[i] - 'A'
-
-        string_alphitize_iter_inc
-            ADD R1, R1, #1 ; i++ | R1++
-    BRnzp string_alphitize_iter ; }
-
-    string_alphitize_done ; return
-    LDR R7, R6, #2
-    LDR R1, R6, #1
-    LDR R2, R6, #0
-    ADD R6, R6, #3
-    
-    RET
-
-   
-counter
+    counter_done ; return
+    LDR R7, R6, #5
+    LDR R1, R6, #4
+    LDR R2, R6, #3
+    LDR R3, R6, #3
+    LDR R4, R6, #2
+    LDR R5, R6, #1
+    ADD R6, R6, #6
+    RET       
 
 TEST_NAME .STRINGZ "Sir Testcasifiulz-Payasser\n"
 CAP_START .STRINGZ "A"
 LOWER_START .STRINGZ "a"
 SPACE .STRINGZ " "
-COUNT_ARRAY .BLKW 27
 p26 .FILL #26
+COUNTER_TEST_LOC .BLKW 26
 
 .END

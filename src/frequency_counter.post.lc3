@@ -23,12 +23,6 @@ COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i
 NAME_INPUT_BUFFER .BLKW 32
 
 main 
-    LD R0, zero
-    LD R1, zero
-    LD R2, zero
-    LD R3, zero
-    LD R4, zero
-    LD R5, zero
     LEA R1, NAME_INPUT_BUFFER
     JSR input
     JSR string_lower

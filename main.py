@@ -62,7 +62,7 @@ def main():
     for file in args.filenames:
         path = Path(file)
         src = open(path, "r").read().encode()
-        new_path = path.with_suffix(".lc3.post")
+        new_path = path.with_suffix(".post.lc3")
         new_src = do_directives(src)
         open(new_path, "w").write(new_src.decode())
         subprocess.call(["lc3as", new_path])

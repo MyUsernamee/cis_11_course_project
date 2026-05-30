@@ -17,7 +17,7 @@ SPACE .STRINGZ " " ; ASCII Value of " "
 zero .FILL #0
 p26 .FILL #26
 NEW_LINE .STRINGZ "\n"
-BKSP .FILL x5f
+BKSP .FILL x08
 OUTPUT_SEPARATOR .STRINGZ ": "
 COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i.e. counts[0] is the number of times 'a' appears
 NAME_INPUT_BUFFER .BLKW 32
@@ -75,6 +75,7 @@ input ; Reads string until new line to buffer location in R1
     LD R2, NEW_LINE
     LD R3, zero
     LD R4, BKSP
+    ADD R5, R1, #0
 
     NOT R2, R2
     ADD R2, R2, #1
@@ -82,11 +83,21 @@ input ; Reads string until new line to buffer location in R1
     NOT R4, R4
     ADD R4, R4, #1
 
+    NOT R5, R5
+    ADD R5, R5, #1
+
     input_loop
         GETC
+
+        ADD R6, R6, #-1 
+        STR R5, R6, #0
+
         LD R3, zero
         LD R5, KBSR
         STR R3, R5, #0 ; Reset KBSR
+        
+        LDR R5, R6, #0
+        ADD R6, R6, #1
 
         ADD R3, R0, R2
         BRz input_exit ; Enter
@@ -96,13 +107,18 @@ input ; Reads string until new line to buffer location in R1
 
         STR R0, R1, #0
         ADD R1, R1, #1
+        OUT
         BRnzp input_loop
 
         input_loop_dec
+        ADD R3, R5, R1
+        BRz input_loop
         ADD R1, R1, #-1
+        OUT
         BRnzp input_loop
 
     input_exit
+    OUT
     LD R3, zero
     STR R3, R1, #0
     .POP

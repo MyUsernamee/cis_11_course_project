@@ -12,7 +12,8 @@ from tree_sitter import *
 LANGUAGE = Language(language())
 
 subsitutions = {
-        ".PUSH": """ADD R6, R6, #-1
+        ".PUSH": """
+ADD R6, R6, #-1
 STR R7, R6, #0
 ADD R6, R6, #-1
 STR R1, R6, #0
@@ -24,9 +25,9 @@ ADD R6, R6, #-1
 STR R4, R6, #0 
 ADD R6, R6, #-1
 STR R5, R6, #0 ; Save R1-R5, R7 to stack""",
-        ".POP": """LDR R7, R6, #4
-LDR R1, R6, #3
-LDR R2, R6, #2
+        ".POP": """LDR R7, R6, #5
+LDR R1, R6, #4
+LDR R2, R6, #3
 LDR R3, R6, #2
 LDR R4, R6, #1
 LDR R5, R6, #0

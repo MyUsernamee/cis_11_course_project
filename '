@@ -8,105 +8,16 @@
 
 .ORIG x3000
 
-BRnzp main
-
-TEST_NAME .STRINGZ "The quick brown fox jumps over the lazy dog.\n" ; Random test name that contains _some_ characters.
-CAP_START .STRINGZ "A" ; ASCII Value of A
-LOWER_START .STRINGZ "a" ; ASCII Value of a
-SPACE .STRINGZ " " ; ASCII Value of " "
-zero .FILL #0
-p26 .FILL #26
-NEW_LINE .STRINGZ "\n"
-BKSP .FILL x5f
-OUTPUT_SEPARATOR .STRINGZ ": "
-COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i.e. counts[0] is the number of times 'a' appears
-NAME_INPUT_BUFFER .BLKW 32
-
-main 
-    LEA R1, NAME_INPUT_BUFFER
-    JSR input
+test_counter ; Routine for testing some sub-routines
+    LEA R0, TEST_NAME
+    PUTS
+    LEA R1, TEST_NAME
     JSR string_lower
+    LEA R0, TEST_NAME
+    PUTS
     LEA R2, COUNTER_TEST_LOC
     JSR counter
-    ADD R1, R2, #0
-    JSR output
     HALT
-
-output
-    .PUSH
-    LD R2, zero
-    LD R4, CAP_START
-    ADD R5, R1, #0
-
-    LD R3, p26
-    NOT R3, R3
-    ADD R3, R3, #1 ; Invert R3       
-
-    output_loop
-        ADD R0, R2, R4
-        OUT
-
-        LEA R0, OUTPUT_SEPARATOR
-        PUTS
-        
-        LDR R1, R5, #0
-        JSR print_num ; Convert R1 to String
-        PUTS
-
-        LD R0, NEW_LINE
-        OUT
-
-        ADD R2, R2, #1
-        ADD R5, R5, #1
-        ADD R0, R3, R2
-        BRz output_exit
-        BRnzp output_loop
-
-    output_exit
-    .POP
-    RET
-        
-        
-        
-KBSR .FILL xFE00
-
-input ; Reads string until new line to buffer location in R1
-    .PUSH
-    LD R2, NEW_LINE
-    LD R3, zero
-    LD R4, BKSP
-
-    NOT R2, R2
-    ADD R2, R2, #1
-
-    NOT R4, R4
-    ADD R4, R4, #1
-
-    input_loop
-        GETC
-        LD R3, zero
-        LD R5, KBSR
-        STR R3, R5, #0 ; Reset KBSR
-
-        ADD R3, R0, R2
-        BRz input_exit ; Enter
-
-        ADD R3, R0, R4
-        BRz input_loop_dec ; Backspace
-
-        STR R0, R1, #0
-        ADD R1, R1, #1
-        BRnzp input_loop
-
-        input_loop_dec
-        ADD R1, R1, #-1
-        BRnzp input_loop
-
-    input_exit
-    LD R3, zero
-    STR R3, R1, #0
-    .POP
-    RET
     
 string_lower ; Routine that makes all letters in a string lowercase.
     .PUSH
@@ -157,7 +68,7 @@ string_lower ; Routine that makes all letters in a string lowercase.
     .POP
     RET
 
-counter ; R1 string to count, R2 output array location
+counter
     .PUSH
     
     ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START
@@ -197,11 +108,10 @@ counter ; R1 string to count, R2 output array location
             ADD R5, R5, R0 ; R5 -= 26;
             BRp counter_continue ; if (string[i] > 'z') continue;
 
-            NOT R0, R0
+            NOT R0, R0,
             ADD R0, R0, #1 ; R0 = -R0 = 26
             ADD R5, R5, R0 ; R5 += 26;
             
-            ADD R4, R2, R5
             LDR R3, R4, #0
             ADD R3, R3, #1
             STR R3, R4, #0 ; counts[i] += 1
@@ -243,9 +153,7 @@ mod ; Divide R1 by R2, output remainder in R0
         BRn mod_exit
         BRnzp mod_loop
     mod_exit
-    
-    NOT R2, R2
-    ADD R2, R2, #1
+
     ADD R0, R1, R2
     .POP
     RET
@@ -255,29 +163,32 @@ print_num ; Prints the number in R1
     LD R2, ten 
     LD R3, five
     LEA R4, PRINT_NUMBER_BUFFER
-    LD R5, NUMBER_START
-    ADD R4, R4, #5
+    ADD R4, R4, #6
 
     print_num_loop
-        ADD R4, R4, #-1
         ADD R3, R3, #-1
         BRz print_num_exit
+        ADD R5, R4, R3
         JSR mod 
+        NOT R0, R0
+        ADD R1, R0, #1
+        NOT R0, R0
+        LD R5, NUMBER_START
         ADD R0, R0, R5
-        STR R0, R4, #0
         JSR div
         ADD R1, R0, #0
         BRnzp print_num_loop
 
-    print_num_exit
-    LEA R0, PRINT_NUMBER_BUFFER
-
-    .POP
-    RET
-
-ten .FILL #10 
-five .FILL #6
+TEST_NAME .STRINGZ "The quick brown fox jumps over the lazy dog.\n" ; Random test name that contains _some_ characters.
+CAP_START .STRINGZ "A" ; ASCII Value of A
+LOWER_START .STRINGZ "a" ; ASCII Value of a
 NUMBER_START .STRINGZ "0"
+SPACE .STRINGZ " " ; ASCII Value of " "
+p26 .FILL #26
+ten .FILL #10 
+zero .FILL #0
+five .FILL #6
+COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i.e. counts[0] is the number of times 'a' appears
 PRINT_NUMBER_BUFFER .STRINGZ "     "
 
 .END

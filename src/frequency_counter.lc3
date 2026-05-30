@@ -10,7 +10,7 @@
 
 BRnzp main
 
-TEST_NAME .STRINGZ "The quick brown fox jumps over the lazy dog.\n" ; Random test name that contains _some_ characters.
+INPUT_PROMPT .STRINGZ "Please enter a name: "
 CAP_START .STRINGZ "A" ; ASCII Value of A
 LOWER_START .STRINGZ "a" ; ASCII Value of a
 SPACE .STRINGZ " " ; ASCII Value of " "
@@ -23,12 +23,13 @@ COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i
 NAME_INPUT_BUFFER .BLKW 32
 
 main 
-    LD R0, zero
     LD R1, zero
     LD R2, zero
     LD R3, zero
     LD R4, zero
     LD R5, zero
+    LEA R0, INPUT_PROMPT
+    PUTS
     LEA R1, NAME_INPUT_BUFFER
     JSR input
     JSR string_lower

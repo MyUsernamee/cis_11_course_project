@@ -21,11 +21,17 @@ test_counter ; Routine for testing some sub-routines
     
 string_lower ; Routine that makes all letters in a string lowercase.
     ADD R6, R6, #-1
-    STR R7, R6, #0
-    ADD R6, R6, #-1
-    STR R1, R6, #0
-    ADD R6, R6, #-1
-    STR R2, R6, #0 ; Save R1, R2, R7 to stack
+STR R7, R6, #0
+ADD R6, R6, #-1
+STR R1, R6, #0
+ADD R6, R6, #-1
+STR R2, R6, #0
+ADD R6, R6, #-1
+STR R3, R6, #0 
+ADD R6, R6, #-1
+STR R4, R6, #0 
+ADD R6, R6, #-1
+STR R5, R6, #0 ; Save R1-R5, R7 to stack
     
     AND R0, R0, #0 ; R0 = 0
     string_lower_iter 
@@ -86,10 +92,12 @@ counter
     ADD R6, R6, #-1
     STR R3, R6, #0 
     ADD R6, R6, #-1
+    STR R4, R6, #0 
     ADD R6, R6, #-1
     STR R5, R6, #0 ; Save R1-R5, R7 to stack
 
-    ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START ; R1-5 will be used in decreasing orders of access frequency.
+    ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START
+    ; R1-5 will be used in decreasing orders of access frequency.
     ; i.e. If only need to store something once then
     ; read it a bunch of times, it should be in R5
 

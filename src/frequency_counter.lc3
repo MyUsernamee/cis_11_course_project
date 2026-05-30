@@ -1,0 +1,134 @@
+; frequency_counter.lc3
+; The main core logic of the project, takes in a name 
+; and stores the counts of each letter in an array.
+; These will be subroutines and there will be a 
+; test project in this file, where later it
+; will be merged with other's code for the
+; final program.
+
+.ORIG x3000
+
+test_counter ; Routine for testing some sub-routines
+    LEA R0, TEST_NAME
+    PUTS
+    LEA R1, TEST_NAME
+    JSR string_lower
+    LEA R0, TEST_NAME
+    PUTS
+    LEA R2, COUNTER_TEST_LOC
+    JSR counter
+    HALT
+    
+string_lower ; Routine that makes all letters in a string lowercase.
+    .PUSH
+    
+    AND R0, R0, #0 ; R0 = 0
+    string_lower_iter 
+        LDR R2, R1, #0 ; R2 = counts[i]
+        BRz string_lower_done 
+
+            LD R3, LOWER_START
+            NOT R3, R3
+            ADD R3, R3, #1 ; R3 = -'a'
+            ADD R3, R3, R2 ; R3 = R2 - 'a'
+
+            BRp string_lower_iter_inc  ; If (R2 > 'a') continue;
+            LD R2, LOWER_START 
+            ADD R3, R3, R2 ; R3 = R2 + 'a' (undo last subtraction)
+            
+            LD R2, CAP_START
+            NOT R2, R2
+            ADD R2, R2, #1 ; R2 = -'A'
+            ADD R3, R3, R2 ; R3 -= 'A'
+
+            BRn string_lower_iter_inc ; if (R3 < 'A') continue; (If our character is less than 'A' in the ascii table, leave it alone)
+
+            LD R2, p26 
+            NOT R2, R2
+            ADD R2, R2, #1 ; R2 = -26
+            ADD R3, R3, R2 ; R3 -= 26
+
+            BRp string_lower_iter_inc ; if (R3 > 'Z') continue; (Leave our character alone if it is not a upper case letter)
+
+            NOT R2, R2
+            ADD R2, R2, #1
+            ADD R3, R3, R2 ; R3 += 26;
+
+            LD R2, LOWER_START
+            ADD R3, R3, R2
+            STR R3, R1, #0 ; string[i] = lower(string[i]) = string[i] - 'A' + 'a'
+
+        string_lower_iter_inc
+            ADD R1, R1, #1 ; i++ | R1++
+
+        BRnzp string_lower_iter 
+
+    string_lower_done ; return
+    
+    .POP
+    RET
+
+counter
+    .PUSH
+    
+    ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START
+    ; R1-5 will be used in decreasing orders of access frequency.
+    ; i.e. If only need to store something once then
+    ; read it a bunch of times, it should be in R5
+
+    LD R5, p26
+    NOT R5, R5
+    ADD R5, R5, #-1 ; Load 26 into R5
+
+    AND R0, R0, #0
+    AND R4, R4, #0 ; Clear R0, R4
+    ; i = R4
+    counter_zero_stack_loop ; Clear counts array
+        ADD R3, R4, R5 ; Add 26 to i
+        BRz counter_zero_stack_loop_exit ; break if i < 26
+
+        ADD R3, R4, R2
+        STR R0, R3, #0 ; counts[i] = 0;
+        ADD R4, R4, #1
+    counter_zero_stack_loop_exit
+
+    counter_iter 
+        LDR R5, R1, #0  ; R5 = string[R1];
+        BRz counter_done 
+            LD R0, LOWER_START
+            NOT R0, R0
+            ADD R0, R0, #1 ; R0 = 'a';
+    
+            ADD R5, R5, R0
+            BRn counter_continue ; if (string[i] < 'a') continue;
+
+            LD R0, p26
+            NOT R0, R0
+            ADD R0, R0, #1  ; R0 = -26
+            ADD R5, R5, R0 ; R5 -= 26;
+            BRp counter_continue ; if (string[i] > 'z') continue;
+
+            NOT R0, R0,
+            ADD R0, R0, #1 ; R0 = -R0 = 26
+            ADD R5, R5, R0 ; R5 += 26;
+            
+            LDR R3, R4, #0
+            ADD R3, R3, #1
+            STR R3, R4, #0 ; counts[i] += 1
+        counter_continue
+        ADD R1, R1, #1 ; i++ | R1++
+    BRnzp counter_iter
+
+    counter_done ; return
+
+    .POP
+    RET       
+
+TEST_NAME .STRINGZ "The quick brown fox jumps over the lazy dog.\n" ; Random test name that contains _some_ characters.
+CAP_START .STRINGZ "A" ; ASCII Value of A
+LOWER_START .STRINGZ "a" ; ASCII Value of a
+SPACE .STRINGZ " " ; ASCII Value of " "
+p26 .FILL #26 ; 26
+COUNTER_TEST_LOC .BLKW 26 ; counts array, contains the counts of every letter, i.e. counts[0] is the number of times 'a' appears
+
+.END

@@ -27,45 +27,49 @@ main
     LD R2, zero
     LD R3, zero
     LD R4, zero
-    LD R5, zero
+    LD R5, zero ; Clear registers
+
     LEA R0, INPUT_PROMPT
-    PUTS
+    PUTS ; Print input prompt
+
     LEA R1, NAME_INPUT_BUFFER
     JSR input
-    JSR string_lower
+    JSR string_lower ; Read input from user and sanatize it (lower all characters)
+
     LEA R2, COUNTER_TEST_LOC
-    JSR counter
+    JSR counter ; Run main counting logic
+
     ADD R1, R2, #0
-    JSR output
+    JSR output ; Output results
     HALT
 
 output
     .PUSH
     LD R2, zero
     LD R4, CAP_START
-    ADD R5, R1, #0
+    ADD R5, R1, #0 ; Move R5 to R1
 
     LD R3, p26
     NOT R3, R3
     ADD R3, R3, #1 ; Invert R3       
 
     output_loop
-        ADD R0, R2, R4
-        OUT
+        ADD R0, R2, R4 ; R0 = char(CAP_START + i)
+        OUT ; Output character
 
         LEA R0, OUTPUT_SEPARATOR
-        PUTS
+        PUTS ; Output seperator for each character.
         
         LDR R1, R5, #0
         JSR print_num ; Convert R1 to String
-        PUTS
+        PUTS ; Output count.
 
         LD R0, NEW_LINE
-        OUT
+        OUT ; Put a new line.
 
         ADD R2, R2, #1
         ADD R5, R5, #1
-        ADD R0, R3, R2
+        ADD R0, R3, R2 ; Increment index and count array pointer.
         BRz output_exit
         BRnzp output_loop
 
@@ -73,38 +77,36 @@ output
     .POP
     RET
         
-        
-        
-KBSR .FILL xFE00
+KBSR .FILL xFE00 ; Clear read status register
 
 input ; Reads string until new line to buffer location in R1
     .PUSH
     LD R2, NEW_LINE
     LD R3, zero
     LD R4, BKSP
-    ADD R5, R1, #0
+    ADD R5, R1, #0 ; Move R1 to R5 ( so we can use R1 as a subroutine input. )
 
     NOT R2, R2
-    ADD R2, R2, #1
+    ADD R2, R2, #1 ; Invert R2 ( so we can detect when a user presses enter. )
 
     NOT R4, R4
-    ADD R4, R4, #1
+    ADD R4, R4, #1 ; Invert R4 ( so we can detect when the user deletes a character. )
 
     NOT R5, R5
-    ADD R5, R5, #1
+    ADD R5, R5, #1 ; Invert R5, ( so we can detect how many characters have been typed. )
 
     input_loop
-        GETC
+        GETC ; Read one character.
 
         ADD R6, R6, #-1 
-        STR R5, R6, #0
+        STR R5, R6, #0 ; Save R5 to stack.
 
         LD R3, zero
         LD R5, KBSR
         STR R3, R5, #0 ; Reset KBSR
         
         LDR R5, R6, #0
-        ADD R6, R6, #1
+        ADD R6, R6, #1 ; Load R5 from stack.
 
         ADD R3, R0, R2
         BRz input_exit ; Enter
@@ -112,8 +114,8 @@ input ; Reads string until new line to buffer location in R1
         ADD R3, R0, R4
         BRz input_loop_dec ; Backspace
 
-        STR R0, R1, #0
-        ADD R1, R1, #1
+        STR R0, R1, #0 ; Save character to next spot in string
+        ADD R1, R1, #1 ; Increment string pointer.
         OUT
         BRnzp input_loop
 
@@ -127,7 +129,7 @@ input ; Reads string until new line to buffer location in R1
     input_exit
     OUT
     LD R3, zero
-    STR R3, R1, #0
+    STR R3, R1, #0 ; Add null terminator to string.
     .POP
     RET
     
@@ -182,11 +184,6 @@ string_lower ; Routine that makes all letters in a string lowercase.
 
 counter ; R1 string to count, R2 output array location
     .PUSH
-    
-    ; We will use R0, as our "constant register". We will use it to load constants from memory, i.e. LOWER_START
-    ; R1-5 will be used in decreasing orders of access frequency.
-    ; i.e. If only need to store something once then
-    ; read it a bunch of times, it should be in R5
 
     LD R5, p26
     NOT R5, R5
@@ -245,9 +242,9 @@ div ; Divide R1 by R2, output result in R0
     ADD R2, R2, #1 ; Negate R2
     
     div_loop
-        ADD R1, R1, R2
-        BRn div_exit
-        ADD R0, R0, #1
+        ADD R1, R1, R2 ; Subtract R2 from R1
+        BRn div_exit ; Until there is nothing left.
+        ADD R0, R0, #1 ; Count how many times we were able to subtract R2
         BRnzp div_loop
     
     div_exit
@@ -262,45 +259,52 @@ mod ; Divide R1 by R2, output remainder in R0
     ADD R2, R2, #1 ; Negate R2
     
     mod_loop
-        ADD R1, R1, R2
-        BRn mod_exit
+        ADD R1, R1, R2 ; Subtract R2 from R1
+        BRn mod_exit ; Until there is nothing left.
         BRnzp mod_loop
     mod_exit
     
     NOT R2, R2
-    ADD R2, R2, #1
-    ADD R0, R1, R2
+    ADD R2, R2, #1 ; Uninvert R2.
+    ADD R0, R1, R2 ; Add that back to R1 so instead of being the last iteration that
+                   ; caused the numerator to be negative, it is the remainder
     .POP
     RET
 
 print_num ; Prints the number in R1
     .PUSH
     LD R2, ten 
-    LD R3, five
-    LEA R4, PRINT_NUMBER_BUFFER
-    LD R5, NUMBER_START
-    ADD R4, R4, #5
+    LD R3, five ; Loaded so we know how many characters there are in a possible number
+                ; string number. Since LC3 can only store 2^16 numbers, we only need 5
+                ; digits to display all possible positive numbers (65535)
+                ; This is the index: i = 5
+    LEA R4, PRINT_NUMBER_BUFFER ; Output buffer (ideally we would return this with
+                                ; something like the stack but LC-3 makes this a pain.
+    LD R5, NUMBER_START ; Ascii index of '0' or the start of the numbers
+    ADD R4, R4, #5 ; Pointer to end of output string
 
     print_num_loop
         ADD R4, R4, #-1
-        ADD R3, R3, #-1
+        ADD R3, R3, #-1 ; Subtract one from the end of the string pointer
+                        ; Subtract one the index i--
         BRz print_num_exit
-        JSR mod 
-        ADD R0, R0, R5
-        STR R0, R4, #0
-        JSR div
-        ADD R1, R0, #0
-        BRnzp print_num_loop
+        JSR mod ; R0 = R1 % R2 = R1 % 10
+        ADD R0, R0, R5 ; Add the digit to the number start ascii offset
+                       ; to convert it to a char.
+        STR R0, R4, #0 ; output_string[R1] = R0 (save to string)
+        JSR div ; R0 = floor(R1 / R2) = floor(R1 / 10)
+        ADD R1, R0, #0 ; Move R1 to R0
+        BRnzp print_num_loop ; End of loop
 
     print_num_exit
-    LEA R0, PRINT_NUMBER_BUFFER
+    LEA R0, PRINT_NUMBER_BUFFER ; Put location of output string in R0 (return register)
 
     .POP
     RET
 
 ten .FILL #10 
 five .FILL #6
-NUMBER_START .STRINGZ "0"
-PRINT_NUMBER_BUFFER .STRINGZ "     "
+NUMBER_START .STRINGZ "0" ; Start of numbers in ASCII table
+PRINT_NUMBER_BUFFER .STRINGZ "     " ; Output buffer for print_num subroutine
 
 .END

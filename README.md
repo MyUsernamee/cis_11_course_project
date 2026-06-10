@@ -19,6 +19,13 @@ The program will prompt for a name and output the number of occurences
 for each character.
 ```
 
+To use the preprocessor, ensure you have [uv](https://docs.astral.sh/uv/) installed,
+along with python, then simply run:
+
+`uv install -e .`
+
+This installs a CLI tool `lc3preprocess`, run `lc3preprocess` for help.
+
 # Contributors
 
 - [MyUsernamee (Delano Leslie)](http://github.com/MyUsernmee)

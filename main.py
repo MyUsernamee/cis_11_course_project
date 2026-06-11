@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from tempfile import TemporaryFile
 from tree_sitter_lc3asm import language
 from tree_sitter import *
 
@@ -45,10 +46,11 @@ def do_directives(src: bytes):
         while not text in subsitutions and len(captures['d']) > 0:
             node = captures["d"].pop()
             text = node.text.decode().upper()
-        if len(captures['d']) == 0:
+        if len(captures['d']) == 0 and not text in subsitutions:
             return src
         src = src[:node.start_byte] + subsitutions[text].encode() + src[node.end_byte:]
         tree = parser.parse(src)
+        tree.print_dot_graph(open('./test.dot', 'w'))
         captures = c.captures(tree.root_node)
 
     return src

@@ -66,19 +66,22 @@ STR R5, R6, #0 ; Save R1-R5, R7 to stack
     ADD R3, R3, #1 ; Invert R3       
 
     output_loop
+        LDR R1, R5, #0
+        BRz output_loop_iter
+        
         ADD R0, R2, R4 ; R0 = char(CAP_START + i)
         OUT ; Output character
 
         LEA R0, OUTPUT_SEPARATOR
         PUTS ; Output seperator for each character.
         
-        LDR R1, R5, #0
         JSR print_num ; Convert R1 to String
         PUTS ; Output count.
 
         LD R0, NEW_LINE
         OUT ; Put a new line.
-
+        
+    output_loop_iter
         ADD R2, R2, #1
         ADD R5, R5, #1
         ADD R0, R3, R2 ; Increment index and count array pointer.
